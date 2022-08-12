@@ -1,21 +1,10 @@
-#include<stdio.h>
-#include "pico/stdlib.h"
-#include "pico/time.h"
-#include "hardware/i2c.h"
-#include "hardware/gpio.h"
-#include "mpu6050.h"
-#include "ei_run_classifier.h"
-#include "hardware/irq.h"
-#include "hardware/pwm.h"
-#include "hardware/pio.h"
+#include "main.h"
 
-#define SCL 1
-#define SDA 0
-#define CONVERT_G_TO_MS2    9.80665f
+using namespace pico_ssd1306;
 
 static bool debug_nn = false;
 volatile bool timer0_occur=false,timer1_occur=false;
-const uint LED_PIN = 17;
+const uint LED_PIN = 25;
 
 bool repeating_timer_callback(struct repeating_timer *t)
 {
@@ -32,20 +21,24 @@ int main()
     gpio_set_dir(LED_PIN, GPIO_OUT);
 
     uint slice_num = pwm_gpio_to_slice_num(PICO_DEFAULT_LED_PIN);
-
-    // Mask our slice's IRQ output into the PWM block's single interrupt line,
-    // and register our interrupt handler
-    //pwm_clear_irq(slice_num);
-    //pwm_set_irq_enabled(slice_num, true);
-    
-
+// Initialize I2C port 0 and configuring Pins 0 and 1 for MPU6050
     i2c_init(I2C_PORT,100000);
     gpio_set_function(SCL,GPIO_FUNC_I2C);
     gpio_set_function(SDA,GPIO_FUNC_I2C);
     gpio_pull_up(SCL);
     gpio_pull_up(SDA);
      mpu6050_reset();
+
+//Initialize I2C port 1 and Configuring Pins 12 and 13 for SSD1306 OLED display
+    i2c_init(SSD1306_I2C, 400000);
+    gpio_set_function(SSD1306_SCL, GPIO_FUNC_I2C);
+    gpio_set_function(SSD1306_SDA, GPIO_FUNC_I2C);
+    gpio_pull_up(SSD1306_SCL);
+    gpio_pull_up(SSD1306_SDA);
     
+    sleep_ms(250);
+    SSD1306 display = SSD1306(SSD1306_I2C, 0x3C, Size::W128xH64);
+    display.setOrientation(0);
 
     ei_impulse_result_t result = {0};
 
@@ -63,7 +56,7 @@ int main()
     
     {
          ei_printf("\nStarting inferencing in 2 seconds...\n");
-
+    display.clear();
     sleep_ms(2000);
 
     ei_printf("Sampling...\n");
@@ -114,17 +107,7 @@ int main()
     }
     
     if(result.classification[1].value>=0.8)
-    {/*
-    irq_set_exclusive_handler(PWM_IRQ_WRAP, led_fade);
-    pwm_config config = pwm_get_default_config();
-
-    irq_set_enabled(PWM_IRQ_WRAP, true);
-
-  
-    pwm_config_set_clkdiv(&config, 4.f);
-    
-    pwm_init(slice_num, &config, true);
-        */
+    {
         if(timer1_occur==true)
         {
             cancel_repeating_timer(&timer);
@@ -133,31 +116,19 @@ int main()
         if(timer0_occur==false)
         {
         add_repeating_timer_ms(200, repeating_timer_callback, NULL, &timer);
-       // pwm_set_irq_enabled(slice_num, true);
-        
         timer0_occur=true;
         }
+        display.addBitmapImage(0, 10, 128, 64, image_left_right);
+        drawText(&display, font_8x8, "LEFT-RIGHT", 20 ,0);
         ei_printf("left-right triggered\n");
      //   multicore_fifo_push_blocking(1);
      
     }
     else if(result.classification[2].value>=0.8)
-    {/*
-    irq_set_exclusive_handler(PWM_IRQ_WRAP, led_blink);
-    pwm_config config = pwm_get_default_config();
-
-    irq_set_enabled(PWM_IRQ_WRAP, true);
-
-  
-    pwm_config_set_clkdiv(&config, 4.f);
-    
-    pwm_init(slice_num, &config, true);
-        */
+    {
         if(timer0_occur==true)
         {
         cancel_repeating_timer(&timer);
-      // pwm_set_irq_enabled(slice_num, false);
-       
         timer1_occur=false;
         }
         if(timer1_occur==false)
@@ -165,11 +136,15 @@ int main()
         add_repeating_timer_ms(800,repeating_timer_callback, NULL, &timer);
         timer1_occur=true;
         }
+        display.addBitmapImage(0,0,128,64,image_up_down);
+        drawText(&display, font_8x8, "UP-DOWN", 30 ,0);
         ei_printf("up-down triggered\n");
-      // add_repeating_timer_ms(500, repeating_timer_callback, NULL, &timer);
-    
     }
-
+    else 
+    {
+    drawText(&display, font_16x32, "IDLE", 30 ,20);
+    }
+display.sendBuffer();
     
 #if EI_CLASSIFIER_HAS_ANOMALY == 1
     ei_printf("    anomaly score: %.3f\n", result.anomaly);

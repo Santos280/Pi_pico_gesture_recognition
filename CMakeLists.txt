@@ -11,7 +11,7 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 11)
 
 pico_sdk_init()
-
+add_subdirectory(pico-ssd1306)
 add_executable(Pico_gesture_recognition
 src/mpu6050.cpp
 src/ei_classifier_porting.cpp
@@ -32,7 +32,7 @@ include(${MODEL_FOLDER}/edge-impulse-sdk/cmake/utils.cmake)
 
 
 
-target_link_libraries(Pico_gesture_recognition pico_stdlib hardware_gpio hardware_i2c hardware_pio hardware_pwm)
+target_link_libraries(Pico_gesture_recognition pico_stdlib hardware_gpio hardware_i2c hardware_pio hardware_pwm pico_ssd1306)
 
 
 
