@@ -19,3 +19,9 @@
 #define SSD1306_I2C     i2c1
 #define SSD1306_SCL     3
 #define SSD1306_SDA     2
+
+/**
+ * @brief gesture recognition handled on core-1 of pico
+ * 
+ */
+void gesture_recognize(); 

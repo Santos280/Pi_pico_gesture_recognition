@@ -1,3 +1,12 @@
+/**
+ * @file OLED_bitmap.h
+ * @author Shubham Santosh
+ * @brief contains bitmap array of left-right and up-down image to be displayed on 64x128 SSD1306 OLED display
+ * @date 2022-08-15
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
 #include<stdio.h>
 
 unsigned char image_up_down[] = {

@@ -1,3 +1,12 @@
+/**
+ * @file main.cpp
+ * @author Shubham Santosh
+ * @brief main source code for pico gesture recognition
+ * @date 2022-08-15
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
 #include "main.h"
 
 using namespace pico_ssd1306;
@@ -32,7 +41,7 @@ void gesture_recognize()
     while (true) 
     
     {
-        gpio_put(LED_PIN,1);
+        gpio_put(LED_PIN,1);  //Indicating wait operation
          ei_printf("\nStarting inferencing in 2 seconds...\n");
     sleep_ms(2000);
     gpio_put(LED_PIN,0);
@@ -109,7 +118,11 @@ void gesture_recognize()
 
     }
 }
-
+/**
+ * @brief Main function that invokes core-1 init and handles OLED operations
+ * 
+ * @return int 
+ */
 int main()
 {
     stdio_init_all();
