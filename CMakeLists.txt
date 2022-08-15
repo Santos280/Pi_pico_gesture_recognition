@@ -32,7 +32,7 @@ include(${MODEL_FOLDER}/edge-impulse-sdk/cmake/utils.cmake)
 
 
 
-target_link_libraries(Pico_gesture_recognition pico_stdlib hardware_gpio hardware_i2c hardware_pio hardware_pwm pico_ssd1306)
+target_link_libraries(Pico_gesture_recognition pico_stdlib hardware_gpio hardware_i2c hardware_pio hardware_pwm pico_ssd1306 pico_multicore)
 
 
 

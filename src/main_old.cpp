@@ -5,6 +5,14 @@ using namespace pico_ssd1306;
 static bool debug_nn = false;
 volatile bool timer0_occur=false,timer1_occur=false;
 const uint LED_PIN = 25;
+/*
+bool repeating_timer_callback(struct repeating_timer *t)
+{
+    static bool led_stat=0;
+    led_stat=1-led_stat;
+    gpio_put(LED_PIN,led_stat);
+    return true;
+}*/
 
 void gesture_recognize()
 {
@@ -28,7 +36,7 @@ void gesture_recognize()
     if (EI_CLASSIFIER_RAW_SAMPLES_PER_FRAME != 3) {
         ei_printf("ERR: EI_CLASSIFIER_RAW_SAMPLES_PER_FRAME should be equal to 3 (the 3 sensor axes)\n");
     }
-
+   // struct repeating_timer timer;
     while (true) 
     
     {
@@ -87,13 +95,35 @@ void gesture_recognize()
     }
     
     if(result.classification[1].value>=0.8)
-    {
+    {/*
+        if(timer1_occur==true)
+        {
+            cancel_repeating_timer(&timer);
+            timer0_occur=false;
+        }
+        if(timer0_occur==false)
+        {
+        add_repeating_timer_ms(200, repeating_timer_callback, NULL, &timer);
+        timer0_occur=true;
+        }
+        */
         ei_printf("left-right triggered\n");
         multicore_fifo_push_blocking(1);
      
     }
     else if(result.classification[2].value>=0.8)
-    {
+    {/*
+        if(timer0_occur==true)
+        {
+        cancel_repeating_timer(&timer);
+        timer1_occur=false;
+        }
+        if(timer1_occur==false)
+        {
+        add_repeating_timer_ms(800,repeating_timer_callback, NULL, &timer);
+        timer1_occur=true;
+        }
+        */
         ei_printf("up-down triggered\n");
         multicore_fifo_push_blocking(2);
     }
@@ -102,6 +132,7 @@ void gesture_recognize()
     
     multicore_fifo_push_blocking(3);
     }
+//display.sendBuffer();
     
 #if EI_CLASSIFIER_HAS_ANOMALY == 1
     ei_printf("    anomaly score: %.3f\n", result.anomaly);
@@ -123,11 +154,20 @@ int main()
     
     sleep_ms(250);
     SSD1306 display = SSD1306(SSD1306_I2C, 0x3C, Size::W128xH64);
-    display.setOrientation(0);
-    
+    //display.setOrientation(0);
+    int16_t accel[3],gyro[3],time;
     uint32_t gesture;
     while(1)
     {
+        mpu6050_read(accel,gyro,&time);
+        if(accel[3]>=10000)
+        {
+            display.setOrientation(0);
+        }
+        else if(accel[3]<=-8000)
+        {
+            display.setOrientation(1);
+        }
         if(multicore_fifo_rvalid())
         {
         gesture=multicore_fifo_pop_blocking();
@@ -147,8 +187,9 @@ int main()
         drawText(&display, font_16x32, "IDLE", 30 ,20);
         }
         gesture=-1;
-        display.sendBuffer();
         }
+        display.sendBuffer();
+        sleep_ms(200);
     }
     return 0;
 }

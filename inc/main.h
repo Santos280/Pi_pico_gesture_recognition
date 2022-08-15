@@ -10,6 +10,7 @@
 #include "../pico-ssd1306/ssd1306.h"
 #include "../pico-ssd1306/textRenderer/TextRenderer.h"
 #include "OLED_bitmap.h"
+#include "pico/multicore.h"
 
 #define SCL 1
 #define SDA 0
