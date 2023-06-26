@@ -13,4 +13,4 @@ I have made this project only for learning purpose and it does not serve any pra
 3. Breadboard.
 4. Jumper wires.
 
-Complete project description mentioned in [Hackster.io]()
+Complete project description mentioned in [Hackster.io](https://www.hackster.io/shubhamsantosh99/gesture-recognition-on-pico-using-edge-impulse-fd962e)
